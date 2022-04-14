@@ -1,91 +1,202 @@
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
+import { Link as RouterLink, Route, Routes, MemoryRouter, useLocation } from 'react-router-dom';
+import { StaticRouter } from 'react-router-dom/server';
+import { styled, useTheme } from '@mui/material/styles';
+import { Box, CssBaseline, AppBar, IconButton, Toolbar, Drawer, List, ListItem,
+  ListItemIcon, ListItemText, Divider, Typography, Button } from '@mui/material';
+import { Menu, Dashboard, ChevronLeft, ChevronRight } from '@mui/icons-material';
+import EnhancedTable from './EnhancedTable';
+import Contents from './Contents';
+import axios from 'axios';
 
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
+const drawerWidth = 200;
+
+const openedMixin = (theme) => ({
+  width: drawerWidth,
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.enteringScreen,
+  }),
+  overflowX: 'hidden',
+});
+
+const closedMixin = (theme) => ({
+  transition: theme.transitions.create('width', {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  overflowX: 'hidden',
+  width: `calc(${theme.spacing(7)} + 1px)`,
+  [theme.breakpoints.up('sm')]: {
+    width: `calc(${theme.spacing(8)} + 1px)`,
+  },
+});
+
+const StyledAppBar = styled(AppBar, {
+  shouldForwardProp: (prop) => prop !== 'open',
+})(({ theme, open }) => ({
+  zIndex: theme.zIndex.drawer + 1,
+  transition: theme.transitions.create(['width', 'margin'], {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  ...(open && {
+    marginLeft: drawerWidth,
+    width: `calc(100% - ${drawerWidth}px)`,
+    transition: theme.transitions.create(['width', 'margin'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
+}));
+
+const StyledDrawer = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'open' })(
+  ({ theme, open }) => ({
+    width: drawerWidth,
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
+    boxSizing: 'border-box',
+    ...(open && {
+      ...openedMixin(theme),
+      '& .MuiDrawer-paper': openedMixin(theme),
+    }),
+    ...(!open && {
+      ...closedMixin(theme),
+      '& .MuiDrawer-paper': closedMixin(theme),
+    }),
+  }),
+);
+
+const DrawerHeader = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  padding: theme.spacing(0, 1),
+  // necessary for content to be below app bar
+  ...theme.mixins.toolbar,
+}));
+
+function Router(props) {
+  const { children } = props;
+  if (typeof window === 'undefined') {
+    return <StaticRouter location="/">{children}</StaticRouter>;
+  }
 
   return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`vertical-tabpanel-${index}`}
-      aria-labelledby={`vertical-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ p: 3 }}>
-          <Typography>{children}</Typography>
-        </Box>
-      )}
-    </div>
+    <MemoryRouter initialEntries={['/']} initialIndex={0}>
+      {children}
+    </MemoryRouter>
   );
 }
 
-TabPanel.propTypes = {
+Router.propTypes = {
   children: PropTypes.node,
-  index: PropTypes.number.isRequired,
-  value: PropTypes.number.isRequired,
 };
 
-function a11yProps(index) {
-  return {
-    id: `vertical-tab-${index}`,
-    'aria-controls': `vertical-tabpanel-${index}`,
-  };
+
+function ListItemLink(props) {
+  const { icon, primary, to } = props;
+
+  const renderLink = React.useMemo(
+    () =>
+      React.forwardRef(function Link(itemProps, ref) {
+        return <RouterLink to={to} ref={ref} {...itemProps} role={undefined} />;
+      }),
+    [to],
+  );
+
+  return (
+    <li>
+      <ListItem button component={renderLink}>
+        {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
+        <ListItemText primary={primary} />
+      </ListItem>
+    </li>
+  );
 }
 
-export default function VerticalTabs() {
-  const [value, setValue] = React.useState(0);
+ListItemLink.propTypes = {
+  icon: PropTypes.element,
+  primary: PropTypes.string.isRequired,
+  to: PropTypes.string.isRequired,
+};
 
-  const handleChange = (event, newValue) => {
-    setValue(newValue);
+function Content() {
+  const location = useLocation();
+  return (
+    <Typography variant="body2" sx={{ pb: 2 }} color="text.secondary">
+      Current route: {location.pathname}
+    </Typography>
+  );
+}
+
+export default function App() {
+  useEffect(() => {
+    axios.get('/api/test')
+      .then(res => console.log(res))
+      .catch()
+  })
+
+  const theme = useTheme();
+  const [value, setValue] = useState(0);
+  const [drawerOpen, setdrawerOpen] = useState(true);
+
+  const handleDrawerOpen = () => {
+    setdrawerOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    setdrawerOpen(false);
   };
 
   return (
-    <Box
-      sx={{ flexGrow: 1, bgcolor: 'background.paper', display: 'flex', height: '100%' }}
-    >
-      <Tabs
-        orientation="vertical"
-        variant="scrollable"
-        value={value}
-        onChange={handleChange}
-        aria-label="Vertical tabs example"
-        sx={{ borderRight: 1, borderColor: 'divider' }}
-      >
-        <Tab label="Item One" {...a11yProps(0)} />
-        <Tab label="Item Two" {...a11yProps(1)} />
-        <Tab label="Item Three" {...a11yProps(2)} />
-        <Tab label="Item Four" {...a11yProps(3)} />
-        <Tab label="Item Five" {...a11yProps(4)} />
-        <Tab label="Item Six" {...a11yProps(5)} />
-        <Tab label="Item Seven" {...a11yProps(6)} />
-      </Tabs>
-      <TabPanel value={value} index={0}>
-        Item One
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-        Item Two
-      </TabPanel>
-      <TabPanel value={value} index={2}>
-        Item Three
-      </TabPanel>
-      <TabPanel value={value} index={3}>
-        Item Four
-      </TabPanel>
-      <TabPanel value={value} index={4}>
-        Item Five
-      </TabPanel>
-      <TabPanel value={value} index={5}>
-        Item Six
-      </TabPanel>
-      <TabPanel value={value} index={6}>
-        Item Seven
-      </TabPanel>
-    </Box>
+    <Router>
+      <Box sx={{ display: 'flex' }}>
+        <CssBaseline />
+        <StyledAppBar position="fixed" open={drawerOpen} elevation={0} sx={{ bgcolor: "#5a7a8a" }}>
+          <Toolbar>
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              onClick={handleDrawerOpen}
+              edge="start"
+              sx={{
+                marginRight: 5,
+                ...(drawerOpen && { display: 'none' }),
+              }}
+            >
+              <Menu/>
+            </IconButton>
+            <Typography variant="h6" noWrap component="div">
+              Mini variant drawer
+            </Typography>
+          </Toolbar>
+        </StyledAppBar>
+        <StyledDrawer variant="permanent" open={drawerOpen}>
+          <DrawerHeader>
+            <IconButton onClick={handleDrawerClose}>
+              {theme.direction === 'rtl' ? <ChevronRight/> : <ChevronLeft/>}
+            </IconButton>
+          </DrawerHeader>
+            <List aria-label="main mailbox folders">
+              <ListItemLink to="/" primary="DashBoard" icon={<Dashboard />} />
+              <ListItemLink to="/contents" primary="Contents" icon={<Dashboard />} />
+            </List>
+            <Divider />
+            <List aria-label="secondary mailbox folders">
+              <ListItemLink to="/trash" primary="Trash" />
+              <ListItemLink to="/spam" primary="Spam" />
+            </List>
+        </StyledDrawer>
+        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+          <Routes>
+            <Route path="*" element={<Content/>} />
+            <Route path="/" element={<EnhancedTable/>} />
+            <Route path="/contents" element={<Contents/>} />
+          </Routes>
+        </Box>
+      </Box>
+    </Router>
   );
 }
