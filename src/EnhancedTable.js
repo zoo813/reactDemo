@@ -21,6 +21,9 @@ import Switch from '@mui/material/Switch';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Stack from '@mui/material/Stack';
 
 function createData(name, calories, fat, carbs, protein) {
   return {
@@ -229,6 +232,7 @@ export default function EnhancedTable() {
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+  const [text, setText] = React.useState('');
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -278,6 +282,17 @@ export default function EnhancedTable() {
     setDense(event.target.checked);
   };
 
+  const textSubmit = (e) => {
+    setText(e.target.value);
+    console.log(e.target.value);
+    console.log(text);
+  };
+  const textChange = (e) => {
+    setText(e.target.value);
+    console.log(e.target.value);
+    console.log(text);
+  };
+
   const isSelected = (name) => selected.indexOf(name) !== -1;
 
   // Avoid a layout jump when reaching the last page with empty rows.
@@ -286,7 +301,17 @@ export default function EnhancedTable() {
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Paper sx={{ width: '100%', mb: 2 }}>
+      <Stack direction="row" spacing={2} justifyContent="flex-end" alignItems="center">
+        <TextField
+            id="standard-search"
+            label="Search field"
+            type="search"
+            variant="standard"
+            onChange={textChange}
+            />
+          <Button variant="outlined" onClick={ e => textSubmit(e)}>Submit</Button>
+      </Stack>
+      <Paper sx={{ width: '100%', mb: 2, mt: 2 }}>
         <EnhancedTableToolbar numSelected={selected.length} />
         <TableContainer>
           <Table

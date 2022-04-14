@@ -189,7 +189,7 @@ export default function App() {
               <ListItemLink to="/spam" primary="Spam" />
             </List>
         </StyledDrawer>
-        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <Box component="main" sx={{ flexGrow: 1, p: 3, pt: 10 }}>
           <Routes>
             <Route path="*" element={<Content/>} />
             <Route path="/" element={<EnhancedTable/>} />
